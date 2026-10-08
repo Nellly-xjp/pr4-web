@@ -1,0 +1,47 @@
+### 1. Перевірка отримання списку товарів (та перевірка X-Header заголовків)
+GET http://localhost:3000/clothes
+
+###
+
+### 2. Перевірка фільтрації за підрядком (search) та обмеження кількістю (limit)
+GET http://localhost:3000/clothes?search=джинси&limit=1
+
+###
+
+### 3. Успішне отримання існуючого запису за ID
+GET http://localhost:3000/clothes/1
+
+###
+
+### 4. Перевірка обробки 404 Not Found (неіснуючий ID)
+GET http://localhost:3000/clothes/99999
+
+###
+
+### 5. Створення нового запису (201 Created)
+POST http://localhost:3000/clothes
+Content-Type: application/json
+
+{
+  "title": "Футболка Oversize",
+  "price": 750,
+  "size": "L",
+  "material": "Бавовна 100%",
+  "color": "Білий"
+}
+
+###
+
+### 6. Часткове оновлення запису за ID
+PATCH http://localhost:3000/clothes/1
+Content-Type: application/json
+
+{
+  "price": 1350,
+  "color": "Темно-синій"
+}
+
+###
+
+### 7. Видалення запису за ID (204 No Content)
+DELETE http://localhost:3000/clothes/1
