@@ -1,101 +1,106 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateClothesDto } from './dto/create-clothes.dto';
-import { UpdateClothesDto } from './dto/update-clothes.dto';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  OnModuleInit,
+} from '@nestjs/common';
 import { randomUUID } from 'crypto';
-
-export interface ClothesItem {
-  id: string;
-  title: string;
-  price: number;
-  size: string;
-  material: string;
-  color: string;
-}
+import { Cloth } from './entities/cloth.entity';
+import { CreateClothDto } from './dto/create-cloth.dto';
+import { UpdateClothDto } from './dto/update-cloth.dto';
+import { SlugService } from '../shared/slug.service';
 
 @Injectable()
-export class ClothesService {
-  private items: ClothesItem[] = [
-    {
-      id: '1',
-      title: 'Джинси Slim Fit',
-      price: 1500,
-      size: 'M',
-      material: 'Бавовна',
-      color: 'Синій',
-    },
-    {
-      id: '2',
-      title: 'Кросівки Running',
-      price: 2800,
-      size: '42',
-      material: 'Сітка/Текстиль',
-      color: 'Чорний',
-    },
-    {
-      id: '3',
-      title: 'Джинси Oversize',
-      price: 1800,
-      size: 'L',
-      material: 'Бавовна',
-      color: 'Блакитний',
-    },
-  ];
+export class ClothesService implements OnModuleInit {
+  private readonly logger = new Logger(ClothesService.name);
+  private items: Cloth[] = [];
 
-  // Пошук із фільтрацією та пагінацією (limit)
-  findAll(search?: string, limit?: number): ClothesItem[] {
-    let result = this.items;
+  constructor(private readonly slugService: SlugService) {}
 
-    if (search) {
-      const searchLower = search.toLowerCase();
-      result = result.filter((item) =>
-        item.title.toLowerCase().includes(searchLower),
-      );
-    }
+  onModuleInit() {
+    this.logger.log('ClothesService ініціалізовано. Завантаження початкових даних...');
 
-    if (limit && !isNaN(limit)) {
-      result = result.slice(0, limit);
-    }
+    const initialClothes: CreateClothDto[] = [
+      {
+        title: 'Oversize Hoodie',
+        price: 1850,
+        size: 'L',
+        material: 'Cotton',
+        color: 'Black',
+      },
+      {
+        title: 'Classic Leather Sneakers',
+        price: 3400,
+        size: '42',
+        material: 'Leather',
+        color: 'White',
+      },
+      {
+        title: 'Straight Denim Jeans',
+        price: 2200,
+        size: '32/32',
+        material: 'Denim',
+        color: 'Blue',
+      },
+    ];
 
-    return result;
+    initialClothes.forEach((dto, idx) => {
+      this.items.push({
+        id: String(idx + 1),
+        slug: this.slugService.generateSlug(`${dto.title}-${dto.color}`),
+        ...dto,
+      });
+    });
+
+    this.logger.log(`У каталог додано ${this.items.length} товарів.`);
   }
 
-  findOne(id: string): ClothesItem {
-    const item = this.items.find((i) => i.id === id);
+  findAll(): Cloth[] {
+    return this.items;
+  }
+
+  findOne(id: string): Cloth {
+    const item = this.items.find((cloth) => cloth.id === id);
     if (!item) {
       throw new NotFoundException(`Сутність з ID ${id} не знайдена`);
     }
     return item;
   }
 
-  create(dto: CreateClothesDto): ClothesItem {
-    const newItem: ClothesItem = {
+  create(dto: CreateClothDto): Cloth {
+    const newItem: Cloth = {
       id: randomUUID(),
+      slug: this.slugService.generateSlug(`${dto.title}-${dto.color}`),
       ...dto,
     };
     this.items.push(newItem);
     return newItem;
   }
 
-  update(id: string, dto: UpdateClothesDto): ClothesItem {
-    const itemIndex = this.items.findIndex((i) => i.id === id);
-    if (itemIndex === -1) {
-      throw new NotFoundException(`Сутність з ID ${id} не знайдена`);
-    }
+  update(id: string, dto: UpdateClothDto): Cloth {
+    const existing = this.findOne(id);
+    const updatedTitle = dto.title ?? existing.title;
+    const updatedColor = dto.color ?? existing.color;
 
-    const updatedItem = {
-      ...this.items[itemIndex],
+    const updatedItem: Cloth = {
+      ...existing,
       ...dto,
+      slug:
+        dto.title || dto.color
+          ? this.slugService.generateSlug(`${updatedTitle}-${updatedColor}`)
+          : existing.slug,
     };
 
-    this.items[itemIndex] = updatedItem;
+    const index = this.items.findIndex((cloth) => cloth.id === id);
+    this.items[index] = updatedItem;
     return updatedItem;
   }
 
   remove(id: string): void {
-    const itemIndex = this.items.findIndex((i) => i.id === id);
-    if (itemIndex === -1) {
+    const index = this.items.findIndex((cloth) => cloth.id === id);
+    if (index === -1) {
       throw new NotFoundException(`Сутність з ID ${id} не знайдена`);
     }
-    this.items.splice(itemIndex, 1);
+    this.items.splice(index, 1);
   }
 }

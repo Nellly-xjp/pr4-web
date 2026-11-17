@@ -45,3 +45,23 @@ Content-Type: application/json
 
 ### 7. Видалення запису за ID (204 No Content)
 DELETE http://localhost:3000/clothes/1
+### 8. Створення замовлення (міжмодульна ін'єкція ClothesService + APP_CONFIG + NOTIFICATION_CLIENT)
+POST http://localhost:3000/orders
+Content-Type: application/json
+
+{
+  "clothId": "2",
+  "quantity": 2
+}
+
+### 9. Перевірка 404 при спробі замовити неіснуючий товар
+POST http://localhost:3000/orders
+Content-Type: application/json
+
+{
+  "clothId": "99999",
+  "quantity": 1
+}
+
+### 10. Отримати список усіх оформлених замовлень
+GET http://localhost:3000/orders

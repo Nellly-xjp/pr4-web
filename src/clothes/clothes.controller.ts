@@ -1,34 +1,25 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Delete,
   Body,
-  Param,
-  Query,
-  Header,
+  Controller,
+  Delete,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
+  Patch,
+  Post,
 } from '@nestjs/common';
 import { ClothesService } from './clothes.service';
-import { CreateClothesDto } from './dto/create-clothes.dto';
-import { UpdateClothesDto } from './dto/update-clothes.dto';
+import { CreateClothDto } from './dto/create-cloth.dto';
+import { UpdateClothDto } from './dto/update-cloth.dto';
 
 @Controller('clothes')
 export class ClothesController {
   constructor(private readonly clothesService: ClothesService) {}
 
-  // Отримання списку з підтримкою search, limit та кастомних заголовків
   @Get()
-  @Header('X-API-Version', '1.0')
-  @Header('X-Service-Status', 'operational')
-  findAll(
-    @Query('search') search?: string,
-    @Query('limit') limit?: string,
-  ) {
-    const parsedLimit = limit ? parseInt(limit, 10) : undefined;
-    return this.clothesService.findAll(search, parsedLimit);
+  findAll() {
+    return this.clothesService.findAll();
   }
 
   @Get(':id')
@@ -38,18 +29,18 @@ export class ClothesController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createDto: CreateClothesDto) {
-    return this.clothesService.create(createDto);
+  create(@Body() createClothDto: CreateClothDto) {
+    return this.clothesService.create(createClothDto);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDto: UpdateClothesDto) {
-    return this.clothesService.update(id, updateDto);
+  update(@Param('id') id: string, @Body() updateClothDto: UpdateClothDto) {
+    return this.clothesService.update(id, updateClothDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id') id: string) {
-    return this.clothesService.remove(id);
+    this.clothesService.remove(id);
   }
 }
